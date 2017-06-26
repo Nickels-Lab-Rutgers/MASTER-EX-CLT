@@ -20,7 +20,7 @@ def attach_dna_prmt_suffix(ex_prmt_suffix_seq, i_fn, o_fn):
         prmt_seq = fields[1]
         cnt = fields[2]
 
-        ofile.write('\t'.join((brcd_seq, prmt_seq + ex_prmt_suffix_seq, cnt)) + '\n')
+        o_file.write('\t'.join((brcd_seq, prmt_seq + ex_prmt_suffix_seq, cnt)) + '\n')
 
     i_file.close()
     o_file.close()
