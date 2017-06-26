@@ -30,7 +30,7 @@ def ex_count_parsed_rna(dna_rd_len, dna_rd_start_ind, i_fn, mm_fn, o_fn):
 
         rna = fields[0]
         dna = fields[1]
-        dna_rd_seq = dna[dna_rd_start_ind, dna_rd_start_ind + dna_rd_len]
+        dna_rd_seq = dna[dna_rd_start_ind : dna_rd_start_ind + dna_rd_len]
         raw_cnt = int(fields[3])
         tn_cnt = int(fields[4])
         rna_len = len(rna)
