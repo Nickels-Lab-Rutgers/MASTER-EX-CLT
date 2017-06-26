@@ -4,10 +4,9 @@ import fastqutil
 
 
 # For testing, use global variables.
-# BEG_SEQ = "AGGCTTGACACTTTATGCTTCGGCTCGTATAATGTG" #36
-BEG_SEQ = "GCGGCCGCAGGCTTGACACTTTATGCTTCGGCTCGTATAATGTG" #44
-MID_SEQ = "GTGAGCGGATAACAAT" #16
-END_SEQ = "CCTGC" #5
+BEG_SEQ = "AGTGAGCGCAACGCAATAACAGTCATCTAGATAGAACTTTAGGCACCCCAGGCTTGACACTTTATGCTTCGGCTCGTATAATGTGTGGAA" 
+MID_SEQ = "GATAACAATTTCAACAAT"
+END_SEQ = "TGGAA"
 
 def parse_dna_seq(seq, qscore, qcutoff, plen, blen):
     seq = seq.strip()
@@ -184,8 +183,8 @@ def main():
     argv = sys.argv
     if len(argv) <= 6:
         sys.stderr.write("Usage: \n\
-%s [Sanger quality score cutoff (>=)] [random promoter region length] \n\
-[barcode length] <output DNA parsed file name> <output DNA stats file name> \n\
+%s [Sanger quality score cutoff (>=)] [random promoter region length] \
+[barcode length] <output DNA parsed file name> <output DNA stats file name> \
 <FASTQ files (space separated)>\n" % argv[0])
         return -1
 
