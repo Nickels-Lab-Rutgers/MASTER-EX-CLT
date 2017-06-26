@@ -80,7 +80,7 @@ def ex_count_parsed_rna(dna_rd_len, dna_rd_start_ind, i_fn, mm_fn, o_fn):
             mm_file.write("%s\t%f\n" % (prmt_seq + dna_suffix, 
                 (tna_prmt_sum - tnm_prmt_sum) / float(tna_prmt_sum) * 100))
         else:
-            mm_file.write(prmt_seq + '\n')
+            mm_file.write(prmt_seq + dna_suffix + '\n')
 
     o_file.close()
     mm_file.close()
