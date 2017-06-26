@@ -4,8 +4,8 @@ import fastqutil
 
 
 # For testing, use global variables.
-MID_SEQ = "GTGAGCGGATAACAAT" #16
-END_SEQ = "CCTGC" #5
+MID_SEQ = "TTCAACAAT"
+END_SEQ = "TGGAATTCTCGGGTG"
 def seq_rmatch(seqa, seqb):
     length = min(len(seqa), len(seqb))
     for i in xrange(-1, -length - 1, -1):

@@ -176,7 +176,7 @@ def parse_dna_fastq_files(qcutoff, plen, blen, or_fn, os_fn, ifn_list):
         "{:.4f}".format(float(num_qual_failed_reads) / num_total_reads * 100))
 
     stats += "For all %d parsed reads:\n" % num_parsed_reads
-    stats += dna_seq_container.output_seq(or_fn, 0.9, 10)
+    stats += dna_seq_container.output_seq(or_fn, 0.9, 0)
 
     with open(os_fn, 'w') as os_file:
         os_file.write(stats)
