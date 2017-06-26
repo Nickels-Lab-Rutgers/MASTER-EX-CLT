@@ -4,7 +4,7 @@ import sys
 import itertools
 import rnautil
 
-BEG_SEQ = "GCGGCCGCAGGCTTGACACTTTATGCTTCGGCTCGTATAATGTG"
+BEG_SEQ = "AGTGAGCGCAACGCAATAACAGTCATCTAGATAGAACTTTAGGCACCCCAGGCTTGACACTTTATGCTTCGGCTCGTATAATGTGTGGAA"
 
 def ex_count_parsed_rna(dna_rd_len, dna_rd_start_ind, i_fn, mm_fn, o_fn):
     # DNA region includes extra sequence downstream
