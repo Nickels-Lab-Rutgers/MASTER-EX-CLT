@@ -24,6 +24,8 @@ def ex_count_parsed_rna(dna_rd_len, dna_rd_start_ind, i_fn, mm_fn, o_fn):
 
     i_file = open(i_fn)
 
+    dna_suffix = None
+
     for line in i_file:
         fields = line.strip().split()
         assert len(fields) == 6
@@ -35,6 +37,11 @@ def ex_count_parsed_rna(dna_rd_len, dna_rd_start_ind, i_fn, mm_fn, o_fn):
         tn_cnt = int(fields[4])
         rna_len = len(rna)
         assert rna_len > 0
+
+        if dna_suffix is None:
+            dna_suffix = dna[dna_rd_start_ind + dna_rd_len:]
+        else:
+            assert dna_suffix == dna[dna_rd_start_ind + dna_rd_len:]
 
         # Only count RNA with promoter seq len [1, DNA prmt seq len + 5]
         if rna_len <= max_rna_prmt_seq_len:
@@ -70,7 +77,7 @@ def ex_count_parsed_rna(dna_rd_len, dna_rd_start_ind, i_fn, mm_fn, o_fn):
         assert tnm_prmt_sum <= tna_prmt_sum
 
         if tna_prmt_sum > 0:
-            mm_file.write("%s\t%f\n" % (prmt_seq, 
+            mm_file.write("%s\t%f\n" % (prmt_seq + dna_suffix, 
                 (tna_prmt_sum - tnm_prmt_sum) / float(tna_prmt_sum) * 100))
         else:
             mm_file.write(prmt_seq + '\n')
