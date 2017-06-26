@@ -21,24 +21,35 @@ def parse_rna_seq(seq, qscore, qcutoff, dlen, plen, blen):
 
     # Assume that digital tag always exist, so find MID_SEQ from dlen + 1.
     # dlen + 1 because at least 1 base of promoter region needs to be identified.
-    mid_start = seq.find(MID_SEQ, dlen + 1)
-    if (mid_start == -1):
-        return "MID_SEQ_NOT_FOUND"
 
-    # digital_tag-p-mid-b-end
-    if mid_start + len(MID_SEQ) + blen + len(END_SEQ) > seqlen:
-        return "SHORT_SEQ"
+    # Starting index to search for mid_seq. Inclusive. 
+    # So it is also the length to skip at the beginning.
+    mid_search_start_ind = dlen + 1
+
+    # Traverse all occurence of mid_seq in the read. Return the first valid one.
+    # Assume that the end_seq is long enough to exclude false positive ones. 
+    while True:
+        mid_start = seq.find(MID_SEQ, mid_search_start_ind)
+        if (mid_start == -1):
+            return "MID_SEQ_NOT_FOUND"
     
-    # pstart is random promoter region start (0-based inc)
-    # bstart is barcode start
-    pstart = dlen
-    bstart = mid_start + len(MID_SEQ)
-    end_start = bstart + blen
-    end_end = end_start + len(END_SEQ)
-
-    seq_ex_end = seq[end_start:end_end]
-    if seq_ex_end != END_SEQ:
-        return "END_SEQ_NOT_FOUND"
+        # digital_tag-p-mid-b-end
+        if mid_start + len(MID_SEQ) + blen + len(END_SEQ) > seqlen:
+            return "SHORT_SEQ"
+        
+        # pstart is random promoter region start (0-based inc)
+        # bstart is barcode start
+        pstart = dlen
+        bstart = mid_start + len(MID_SEQ)
+        end_start = bstart + blen
+        end_end = end_start + len(END_SEQ)
+    
+        seq_ex_end = seq[end_start:end_end]
+        if seq_ex_end != END_SEQ:
+            #return "END_SEQ_NOT_FOUND"
+            mid_search_start_ind = mid_start + 1
+        else:
+            break
     
     if min(qscore[0:end_end]) < qcutoff or "N" in seq[0:end_end]:
         return "QUAL_FAILED"
