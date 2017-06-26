@@ -157,6 +157,10 @@ def parse_dna_fastq_files(qcutoff, plen, blen, or_fn, os_fn, ifn_list):
                 dna_seq_container.insert_seq(prmt_seq, brcd_seq)
 
     stats = "Analyzed files: " + str(ifn_list) + "\n"
+    stats += "Beginning fixed sequence: %s\n" % BEG_SEQ
+    stats += "Random promoter region length: %d\n" % plen
+    stats += "Middle fixed sequence: %s\n" % MID_SEQ
+    stats += "Random barcode region length: %d\n\n" % blen
     stats += "Total number of reads: %d\n" % num_total_reads
     # Avoid divide by 0
     if num_total_reads == 0:
