@@ -1,17 +1,12 @@
 #!/usr/bin/env python2.7
 import sys
 import fastqutil
+import rnautil
 
 
 # For testing, use global variables.
 MID_SEQ = "TTCAACAAT"
 END_SEQ = "TGGAATTCTCGGGTG"
-def seq_rmatch(seqa, seqb):
-    length = min(len(seqa), len(seqb))
-    for i in xrange(-1, -length - 1, -1):
-        if seqa[i] != seqb[i]:
-            return(False)
-    return True
 
 def parse_rna_seq(seq, qscore, qcutoff, dlen, plen, blen):
     seq = seq.strip()
@@ -122,7 +117,7 @@ class RNASequenceContainer:
                 identified_dna_prmt_set.add(dna_prmt_seq)
                 num_valid_brcd += 1
                 for prmt_seq, prmt_count_list in prmt_dict.iteritems():
-                    if seq_rmatch(prmt_seq, dna_prmt_seq):
+                    if rnautil.seq_rmatch(prmt_seq, dna_prmt_seq):
                         prmt_rmatch = 1
                     else:
                         prmt_rmatch = 0
