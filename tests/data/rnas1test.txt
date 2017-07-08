@@ -1,0 +1,24 @@
+RNA files: ['data/rna1.fastq']
+DNA template file: data/dnatpl.txt
+Digital tag length: 15
+Promoter region length: 7
+Middle sequence: TTCAACAAT
+Barcode region length: 15
+End sequence: TGGAATTCTCGGGTG
+Quality score cutoff: 0
+
+Total number of reads: 91
+Number of parsed reads: 91 (100.0000%)
+Number of structure failed reads: 0 (0.0000%)
+Number of quality failed reads: 0 (0.0000%)
+
+For all 91 parsed reads:
+Sum of digital tag counts: 9
+Number of total barcodes: 2
+Number of DNA template promoter regions: 2
+Number of valid barcodes: 2 (100.0000%)
+Number of valid reads: 91 (100.0000%)
+Sum of valid digital tag counts: 9 (100.0000%)
+Number of no-dna-template barcodes: 0 (0.0000%)
+Number of no-dna-template reads: 0 (0.0000%)
+Sum of no-dna-template digital tag counts: 0 (0.0000%)

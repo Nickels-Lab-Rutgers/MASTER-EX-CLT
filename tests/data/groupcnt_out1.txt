@@ -1,0 +1,4 @@
+AGTC	17	2
+CTGA	29	3
+GACT	33	3
+others	10	2

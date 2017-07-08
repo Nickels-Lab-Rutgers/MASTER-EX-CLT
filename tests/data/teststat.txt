@@ -1,0 +1,24 @@
+RNA files: ['data/linenum.txt', 'data/empty_line.txt']
+DNA template file: data/dnatpl.txt
+Digital tag length: 15
+Promoter region length: 7
+Middle sequence: TTCAACAAT
+Barcode region length: 15
+End sequence: TGGAATTCTCGGGTG
+Quality score cutoff: 0
+
+Total number of reads: 5
+Number of parsed reads: 0 (0.0000%)
+Number of structure failed reads: 5 (100.0000%)
+Number of quality failed reads: 0 (0.0000%)
+
+For all 0 parsed reads:
+Sum of digital tag counts: 0
+Number of total barcodes: 0
+Number of DNA template promoter regions: 0
+Number of valid barcodes: 0 (0.0000%)
+Number of valid reads: 0 (0.0000%)
+Sum of valid digital tag counts: 0 (0.0000%)
+Number of no-dna-template barcodes: 0 (0.0000%)
+Number of no-dna-template reads: 0 (0.0000%)
+Sum of no-dna-template digital tag counts: 0 (0.0000%)

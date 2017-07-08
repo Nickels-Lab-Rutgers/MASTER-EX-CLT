@@ -1,0 +1,16 @@
+Analyzed files: ['rna1.fastq']
+Total number of reads: 84
+Number of parsed reads: 84 (100.0000%)
+Number of structure failed reads: 0 (0.0000%)
+Number of quality failed reads: 0 (0.0000%)
+
+For all 84 parsed reads:
+Sum of digital tag counts: 9
+Number of total barcodes: 2
+Number of DNA template promoter regions: 2
+Number of valid barcodes: 2 (100.0000%)
+Number of valid reads: 84 (100.0000%)
+Sum of valid digital tag counts: 9 (100.0000%)
+Number of no-dna-template barcodes: 0 (0.0000%)
+Number of no-dna-template reads: 0 (0.0000%)
+Sum of no-dna-template digital tag counts: 0 (0.0000%)
