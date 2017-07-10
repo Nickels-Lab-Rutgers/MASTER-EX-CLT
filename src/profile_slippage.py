@@ -3,6 +3,8 @@ import argparse
 import rnautil
 import collections
 
+# Fields started with '_' are read only. 
+
 class DNASlippageTable(object):
     """docstring for DNASlippageTable"""
 
@@ -208,9 +210,11 @@ class LibrarySlippageTable(object):
 least {} nucleotides: {}'.format(self._MAX_NUM_BP_UPSTREM_RND_REGION, beg_seq)
             raise ValueError(msg)
 
-        self._beg_seq = beg_seq[-_MAX_NUM_BP_UPSTREM_RND_REGION:]
+        self._beg_seq = beg_seq[-self._MAX_NUM_BP_UPSTREM_RND_REGION:]
         self._lib_slpg_cnt_dict = self.get_lib_slpg_cnt_dict(rna_parsed_tbl_iterator)
-
+        # DNA promoter region sequences are required to have the same length. 
+        self._cmpl_dna_prmt_seq_len = len(self._lib_slpg_cnt_dict.keys()[0])
+        
     def get_lib_slpg_cnt_dict(self, rna_parsed_tbl_iterator):
         # {dna : dna_slippage_count_table}
         lib_slpg_cnt_dict = {}
@@ -221,7 +225,7 @@ least {} nucleotides: {}'.format(self._MAX_NUM_BP_UPSTREM_RND_REGION, beg_seq)
                 > self._MAX_NUM_BP_UPSTREM_RND_REGION + len(rna_parsed_record.dna_prmt_seq)):
                 continue
 
-            cmpl_dna_prmt_seq = rna_parsed_record.dna_prmt_seq + self._beg_seq
+            cmpl_dna_prmt_seq = self._beg_seq + rna_parsed_record.dna_prmt_seq 
             if cmpl_dna_prmt_seq not in lib_slpg_cnt_dict:
                 lib_slpg_cnt_dict[cmpl_dna_prmt_seq] = DNASlippageTable(cmpl_dna_prmt_seq)
 
@@ -231,7 +235,48 @@ least {} nucleotides: {}'.format(self._MAX_NUM_BP_UPSTREM_RND_REGION, beg_seq)
         return lib_slpg_cnt_dict
 
     def get_ptn_slippage_tbl(self, ptn_tup_tup):
-        pass
+        # all pattern slippage table
+        a_ptn_slippage_tbl = PtnSlippageTbl()
+
+        for ptn_tup in ptn_tup_tup:
+            # single pattern cnt dict
+            s_ptn_cnt_dict = dict(zip(xrange(1, self._cmpl_dna_prmt_seq_len + 1), 
+                                      ({'matched_tn_cnt' : 0, 'matched_raw_cnt' : 0,
+                                        'mismatched_tn_cnt' : 0, 'mismatched_raw_cnt' : 0,
+                                        'slippage_tn_cnt' : 0, 'slippage_raw_cnt' : 0}
+                                        for i in xrange(1, self._cmpl_dna_prmt_seq_len + 1))))
+            num_matched_dna_prmt_seq = 0
+
+            for cmpl_dna_prmt_seq in self._lib_slpg_cnt_dict:
+                dna_prmt_seq = cmpl_dna_prmt_seq[self._MAX_NUM_BP_UPSTREM_RND_REGION:]
+                if self.ptn_dna_match(ptn_tup, dna_prmt_seq):
+                    num_matched_dna_prmt_seq += 1
+                    dna_slippage_cnt_tbl = self._lib_slpg_cnt_dict[cmpl_dna_prmt_seq]
+                    for length in dna_slippage_cnt_tbl._rna_cnt_dict:
+                        s_ptn_cnt_dict[length]['matched_tn_cnt'] \
+                            += dna_slippage_cnt_tbl._rna_cnt_dict[length]['matched_tn_cnt']
+                        s_ptn_cnt_dict[length]['matched_raw_cnt'] \
+                            += dna_slippage_cnt_tbl._rna_cnt_dict[length]['matched_raw_cnt']
+                        s_ptn_cnt_dict[length]['mismatched_tn_cnt'] \
+                            += dna_slippage_cnt_tbl._rna_cnt_dict[length]['mismatched_tn_cnt']
+                        s_ptn_cnt_dict[length]['mismatched_raw_cnt'] \
+                            += dna_slippage_cnt_tbl._rna_cnt_dict[length]['mismatched_raw_cnt']
+
+                    if (ptn_tup.slippage_type, ptn_tup.match_start_ind + self._MAX_NUM_BP_UPSTREM_RND_REGION) \
+                        not in dna_slippage_cnt_tbl._slp_type_cnt_tbl_dict:
+                        raise ValueError('Slippage pattern not in dna_cnt_tbl: {}'.format(ptn_tup))
+
+                    dna_slpg_type_cnt_tbl = dna_slippage_cnt_tbl._slp_type_cnt_tbl_dict[(ptn_tup.slippage_type, 
+                                                    ptn_tup.match_start_ind + self._MAX_NUM_BP_UPSTREM_RND_REGION)]
+                    for length in dna_slpg_type_cnt_tbl._slippage_cnt_dict:
+                        s_ptn_cnt_dict[length]['slippage_tn_cnt'] \
+                            += dna_slpg_type_cnt_tbl._slippage_cnt_dict[length]['tn_cnt']
+                        s_ptn_cnt_dict[length]['slippage_raw_cnt'] \
+                            += dna_slpg_type_cnt_tbl._slippage_cnt_dict[length]['raw_cnt']
+
+            a_ptn_slippage_tbl.insert_s_ptn_slp_cnt_dict(ptn_tup, s_ptn_cnt_dict, num_matched_dna_prmt_seq)
+
+        return a_ptn_slippage_tbl
 
     # Assume that slp_ptn_tup is valid.
     # pattern only has ACGTNZ
@@ -284,12 +329,6 @@ least {} nucleotides: {}'.format(self._MAX_NUM_BP_UPSTREM_RND_REGION, beg_seq)
         return True
 
 
-
-
-
-
-
-
 # This class only stores the data and format the output.
 # It also includes helper function to validate pattern. 
 # Pattern counting is done by LibrarySlippageTable.
@@ -297,9 +336,87 @@ class PtnSlippageTbl(object):
     """docstring for PtnSlippageTbl"""
     def __init__(self):
         super(PtnSlippageTbl, self).__init__()
+        # {ptn_tup : {length : {'tnXXcnt' : 0, 'rawXXcnt' : 0, ...}, ...}, ...}
+        self._ptn_slp_cnt_dict = {}
+        self._ptn_slp_cnt_dict_ordered_key_list = []
+        self._num_dna_prmt_list = []
 
-    def write_slippage_tbl(self, output_fn):
-        pass
+    def insert_s_ptn_slp_cnt_dict(self, ptn_tup, s_ptn_slp_cnt_dict, num_dna_prmt):
+        if ptn_tup in self._ptn_slp_cnt_dict:
+            raise ValueError('{} is duplicated.'.format(ptn_tup))
+        
+        self._ptn_slp_cnt_dict[ptn_tup] = s_ptn_slp_cnt_dict
+        self._ptn_slp_cnt_dict_ordered_key_list.append(ptn_tup)
+        self._num_dna_prmt_list.append(num_dna_prmt)
+    
+    # This requires that the length range of each slippage pattern to be the same.
+    def fmt_slippage_tbl(self):
+        slp_tbl_str = self.get_table_header()
+        for ind, ptn_tup in enumerate(self._ptn_slp_cnt_dict_ordered_key_list):
+            slp_tbl_str += self.fmt_ptn_tup(ptn_tup) + '\t'
+            slp_tbl_str += str(self._num_dna_prmt_list[ind]) + '\t'
+            s_ptn_slp_cnt_dict = self._ptn_slp_cnt_dict[ptn_tup]
+            slp_tbl_str += self.fmt_s_ptn_slp_cnt_dict(s_ptn_slp_cnt_dict)
+        return slp_tbl_str
+
+    def has_same_len_range(self):
+        a_ptn_len_list = map(lambda d: sorted(d.keys()), self._ptn_slp_cnt_dict.values())
+        if len(a_ptn_len_list) == 0:
+            return True
+
+        for s_ptn_len_list in a_ptn_len_list[1:]:
+            if s_ptn_len_list != a_ptn_len_list[0]:
+                return False
+        return True
+
+    def get_table_header(self):
+        if not self.has_same_len_range():
+            raise ValueError('Pattern slippage table has different lengths.')
+
+        if len(self._ptn_slp_cnt_dict) == 0:
+            return ''
+
+        len_list = sorted(self._ptn_slp_cnt_dict.values()[0].keys(), reverse = True)
+        header_str = 'Pattern\tnumDNAPrmt\t'
+        header_str += '\t'.join(map(lambda l: 'tnSlp{}bp'.format(l), len_list)) + '\t'
+        header_str += '\t'.join(map(lambda l: 'rawSlp{}bp'.format(l), len_list)) + '\t'
+        header_str += '\t'.join(map(lambda l: 'tnM{}bp'.format(l), len_list)) + '\t'
+        header_str += '\t'.join(map(lambda l: 'rawM{}bp'.format(l), len_list)) + '\t'
+        header_str += '\t'.join(map(lambda l: 'tnA{}bp'.format(l), len_list)) + '\t'
+        header_str += '\t'.join(map(lambda l: 'rawA{}bp'.format(l), len_list)) + '\n'
+        return header_str
+
+    # From left to right
+    # length from long to short
+    # TNSLP, SLP, TNM, M, TNA, A
+    @staticmethod
+    def fmt_s_ptn_slp_cnt_dict(s_ptn_slp_cnt_dict):
+        s_ptn_slp_cnt_tup = tuple(s_ptn_slp_cnt_dict[length] 
+                                  for length in sorted(s_ptn_slp_cnt_dict.keys(), reverse = True))
+        tn_slp_list = map(lambda cnt_dict: cnt_dict['slippage_tn_cnt'], 
+                          s_ptn_slp_cnt_tup)
+        raw_slp_list = map(lambda cnt_dict: cnt_dict['slippage_raw_cnt'], 
+                           s_ptn_slp_cnt_tup)
+        tn_m_list = map(lambda cnt_dict: cnt_dict['matched_tn_cnt'], 
+                        s_ptn_slp_cnt_tup)
+        raw_m_list = map(lambda cnt_dict: cnt_dict['matched_raw_cnt'], 
+                         s_ptn_slp_cnt_tup)
+        tn_a_list = map(lambda cnt_dict: cnt_dict['mismatched_tn_cnt'] + cnt_dict['matched_tn_cnt'], 
+                        s_ptn_slp_cnt_tup)
+        raw_a_list = map(lambda cnt_dict: cnt_dict['mismatched_raw_cnt'] + cnt_dict['matched_raw_cnt'], 
+                         s_ptn_slp_cnt_tup)
+
+        s_ptn_slp_cnt_str = ''
+        for l in (tn_slp_list, raw_slp_list, tn_m_list, raw_m_list, tn_a_list, raw_a_list):
+            s_ptn_slp_cnt_str += '\t'.join(map(str, l)) + '\t'
+
+        s_ptn_slp_cnt_str += '\n'
+        return s_ptn_slp_cnt_str
+
+    
+    @staticmethod
+    def fmt_ptn_tup(slp_ptn_tup):
+        return slp_ptn_tup.ptn_seq + '-' + slp_ptn_tup.slippage_type + str(slp_ptn_tup.match_start_ind)
 
     # slp_ptn is a tuple (ptn, slp_type, match_start_ind) that indicates the 
     # pattern of slippage. Examples,
@@ -384,8 +501,8 @@ def main():
     arg_parser.add_argument('beg_seq', metavar = '<Beginning fixed sequence>', 
                             type = nt_sequence)
 
-    arg_parser.add_argument('ptn_fn', metavar = '<slippage pattern table>', 
-                            type = argparse.FileType('r'))
+    arg_parser.add_argument('ptn_tup_iterator', metavar = '<slippage pattern table>', 
+                            type = iterate_slippage_ptn_file)
 
     arg_parser.add_argument('rna_parsed_tbl_iterator', 
                             metavar = '<rna parsed file>', 
@@ -397,7 +514,14 @@ def main():
 
     arg_parser.add_argument('ofile', metavar = '<output file>', type = argparse.FileType('w'))
 
-    arg_parser.parse_args()
+    args = arg_parser.parse_args()
+
+    ptn_tup_tup = tuple(args.ptn_tup_iterator)
+    lib_slp_tbl = LibrarySlippageTable(args.rna_parsed_tbl_iterator, args.beg_seq)
+    ptn_slp_tbl = lib_slp_tbl.get_ptn_slippage_tbl(ptn_tup_tup)
+    ptn_slp_tbl_str = ptn_slp_tbl.fmt_slippage_tbl()
+    args.ofile.write(ptn_slp_tbl_str)
+    args.ofile.close()
 
 if __name__ == '__main__':
     main()
