@@ -208,23 +208,91 @@ class LibrarySlippageTable(object):
 least {} nucleotides: {}'.format(self._MAX_NUM_BP_UPSTREM_RND_REGION, beg_seq)
             raise ValueError(msg)
 
-        self._beg_seq = beg_seq
-        self.slippage_cnt_dict = self.get_slippage_cnt_dict(rna_parsed_tbl_iterator)
+        self._beg_seq = beg_seq[-_MAX_NUM_BP_UPSTREM_RND_REGION:]
+        self._lib_slpg_cnt_dict = self.get_lib_slpg_cnt_dict(rna_parsed_tbl_iterator)
 
-    def get_slippage_cnt_dict(self, rna_parsed_tbl_iterator):
-        # {dna : slippage_counter}
+    def get_lib_slpg_cnt_dict(self, rna_parsed_tbl_iterator):
+        # {dna : dna_slippage_count_table}
+        lib_slpg_cnt_dict = {}
+        for rna_parsed_record in rna_parsed_tbl_iterator:
+            # Only process rna_prmt_seq with less than _MAX_NUM_BP_UPSTREM_RND_REGION upstream
+            # of dna_prmt_seq
+            if (len(rna_parsed_record.rna_prmt_seq) 
+                > self._MAX_NUM_BP_UPSTREM_RND_REGION + len(rna_parsed_record.dna_prmt_seq)):
+                continue
 
-        slpg_cnt_dict = {}
-        #for rna_parsed_record in rna_parsed_tbl_iterator:
-        #    complete_dna_prmt_seq = rna_parsed_record.dna_prmt_seq
+            cmpl_dna_prmt_seq = rna_parsed_record.dna_prmt_seq + self._beg_seq
+            if cmpl_dna_prmt_seq not in lib_slpg_cnt_dict:
+                lib_slpg_cnt_dict[cmpl_dna_prmt_seq] = DNASlippageTable(cmpl_dna_prmt_seq)
+
+            lib_slpg_cnt_dict[cmpl_dna_prmt_seq].add_rna_seq(rna_parsed_record.rna_prmt_seq, 
+                                                             rna_parsed_record.raw_cnt, 
+                                                             rna_parsed_record.tn_cnt)
+        return lib_slpg_cnt_dict
+
+    def get_ptn_slippage_tbl(self, ptn_tup_tup):
         pass
 
+    # Assume that slp_ptn_tup is valid.
+    # pattern only has ACGTNZ
+    # valid length
+    @staticmethod
+    def ptn_dna_match(slp_ptn_tup, dna_prmt_seq):
+        ptn_seq = slp_ptn_tup.ptn_seq
+        slp_type = slp_ptn_tup.slippage_type
+        match_start_ind = slp_ptn_tup.match_start_ind
+        
+        if len(ptn_seq) != len(dna_prmt_seq):
+            msg = "Length of pattern '{}' is different from length of DNA '{}'".format(ptn_seq, dna_prmt_seq)
+            raise ValueError(msg)
+
+        if slp_type == 'H':
+            for i in xrange(len(ptn_seq)):
+                if ptn_seq[i] != 'N':
+                    if ptn_seq[i] == 'Z':
+                        if dna_prmt_seq[i] == ptn_seq[match_start_ind]:
+                            return False
+                    elif ptn_seq[i] in 'ACGT':
+                        if dna_prmt_seq[i] != ptn_seq[i]:
+                            return False
+                    else:
+                        raise ValueError('Unimplemented pattern character: {}'.format(ptn_seq[i]))
+        elif slp_type == 'I':
+            for i in xrange(len(ptn_seq)):
+                if ptn_seq[i] != 'N':
+                    if ptn_seq[i] == 'Z':
+                        if dna_prmt_seq[i] == ptn_seq[match_start_ind + 1]:
+                            return False
+                    elif ptn_seq[i] in 'ACGT':
+                        if dna_prmt_seq[i] != ptn_seq[i]:
+                            return False
+                    else:
+                        raise ValueError('Unimplemented pattern character: {}'.format(ptn_seq[i]))
+        elif slp_type == 'D':
+            for i in xrange(len(ptn_seq)):
+                if ptn_seq[i] != 'N':
+                    if ptn_seq[i] == 'Z':
+                        raise ValueError('Invalid pattern: {}'.format(slp_ptn_tup))
+                    elif ptn_seq[i] in 'ACGT':
+                        if dna_prmt_seq[i] != ptn_seq[i]:
+                            return False
+                    else:
+                        raise ValueError('Unimplemented pattern character: {}'.format(ptn_seq[i]))
+        else:
+            raise ValueError('Unimplemented slippage type: {}. {}'.format(slp_type, slp_ptn_tup))
+
+        return True
 
 
-    def get_ptn_slippage_tbl(self, ptn_list):
-        pass
 
 
+
+
+
+
+# This class only stores the data and format the output.
+# It also includes helper function to validate pattern. 
+# Pattern counting is done by LibrarySlippageTable.
 class PtnSlippageTbl(object):
     """docstring for PtnSlippageTbl"""
     def __init__(self):
@@ -232,8 +300,78 @@ class PtnSlippageTbl(object):
 
     def write_slippage_tbl(self, output_fn):
         pass
-        
 
+    # slp_ptn is a tuple (ptn, slp_type, match_start_ind) that indicates the 
+    # pattern of slippage. Examples,
+    # ('NNAAANN', 'H', 2)
+    # ('NZAAANN', 'H', 2)
+    # ('NZAAANN', 'I', 1)
+    # ('NTAAANN', 'D', 1)
+    # N: [ACGT]
+    # Z: nt different from the homopolymeric tract
+    @staticmethod
+    def is_valid_slp_ptn_tup(slp_ptn_tup):
+        ptn_seq = slp_ptn_tup.ptn_seq
+        slp_type = slp_ptn_tup.slippage_type
+        match_start_ind = slp_ptn_tup.match_start_ind
+
+        for ptn_nt in ptn_seq:
+            if ptn_nt not in 'ACGTNZ':
+                raise ValueError('Unimplemented pattern character: {}'.format(ptn_nt))
+        
+        if slp_type == 'H':
+            # Implicit that ptn_seq[match_start_ind + 1] not in 'NZ'
+            if (match_start_ind + 1 < len(ptn_seq)
+                and ptn_seq[match_start_ind] not in 'NZ'
+                and ptn_seq[match_start_ind] == ptn_seq[match_start_ind + 1]):
+                return True
+
+        elif slp_type == 'I':
+            # Implicit that ptn_seq[match_start_ind + 2] not in 'NZ'
+            if (match_start_ind + 2 < len(ptn_seq)
+                and ptn_seq[match_start_ind] != 'N'
+                and ptn_seq[match_start_ind + 1] not in 'NZ'
+                and ptn_seq[match_start_ind] != ptn_seq[match_start_ind + 1]
+                and ptn_seq[match_start_ind + 1] == ptn_seq[match_start_ind + 2]):
+                return True
+
+        elif slp_type == 'D':
+            if (match_start_ind + 1 < len(ptn_seq)
+                and 'Z' not in ptn_seq
+                and ptn_seq[match_start_ind] not in 'N'
+                and ptn_seq[match_start_ind + 1] not in 'N'
+                and ptn_seq[match_start_ind] != ptn_seq[match_start_ind + 1]):
+                return True
+
+        else:
+            raise ValueError('Unimplemented slippage type: {}. {}'.format(slp_type, slp_ptn_tup))
+
+        return False
+
+    
+
+SlippagePtnTuple = collections.namedtuple('SlippagePtnTuple', 
+                                          ('ptn_seq', 
+                                           'slippage_type', 
+                                           'match_start_ind'))
+
+def iterate_slippage_ptn_file(slp_ptn_fn):
+    with open(slp_ptn_fn, 'r') as slp_ptn_file:
+        for line in slp_ptn_file:
+            fields = line.strip().split()
+            if len(fields) != 3:
+                raise ValueError('Slippage pattern record should have 3 fields. ' + line)
+
+            slp_ptn_tup = SlippagePtnTuple(ptn_seq = fields[0],
+                                           slippage_type = fields[1],
+                                           match_start_ind = int(fields[2]))
+
+            if not PtnSlippageTbl.is_valid_slp_ptn_tup(slp_ptn_tup):
+                raise ValueError('Invalid slippage pattern record: {}'.format(slp_ptn_tup))
+
+            yield slp_ptn_tup
+
+    
 def nt_sequence(nt_seq):
     if rnautil.is_valid_seq(nt_seq):
         return nt_seq

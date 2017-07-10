@@ -484,6 +484,30 @@ class TestDNASlippageTable(unittest.TestCase):
                 self.assertEqual(dna_slp_tbl._slp_type_cnt_tbl_dict[slp_type_tup]._slippage_cnt_dict[len(rna_seq4)]['raw_cnt'], 5)
             else:
                 self.assertEqual(len(dna_slp_tbl._slp_type_cnt_tbl_dict[slp_type_tup]._slippage_cnt_dict), 0)
-        
+
+
+class TestLibrarySlippageTable(unittest.TestCase):
+    def test_ptn_dna_match(self):
+        self.assertTrue(ps.LibrarySlippageTable.ptn_dna_match(ps.SlippagePtnTuple('NNZAANNN', 'I', 2), 
+                                                              'ACCAAATC'))
+        self.assertTrue(ps.LibrarySlippageTable.ptn_dna_match(ps.SlippagePtnTuple('NNZAANNN', 'I', 2), 
+                                                              'ACGAAATC'))
+        self.assertTrue(ps.LibrarySlippageTable.ptn_dna_match(ps.SlippagePtnTuple('NNZAANNN', 'I', 2), 
+                                                              'ACTAAATC'))
+        self.assertTrue(ps.LibrarySlippageTable.ptn_dna_match(ps.SlippagePtnTuple('NNZAANNN', 'H', 3), 
+                                                              'ACCAAATC'))
+        self.assertTrue(ps.LibrarySlippageTable.ptn_dna_match(ps.SlippagePtnTuple('NNTAANNN', 'D', 2), 
+                                                              'ACTAAATC'))
+
+class TestPtnSlippageTbl(unittest.TestCase):
+    def test_is_valid_slp_ptn_tup(self):
+        self.assertTrue(ps.PtnSlippageTbl.is_valid_slp_ptn_tup(ps.SlippagePtnTuple('NNZAANNN', 'I', 2)))
+        self.assertTrue(ps.PtnSlippageTbl.is_valid_slp_ptn_tup(ps.SlippagePtnTuple('NNZAANNN', 'H', 3)))
+        self.assertTrue(ps.PtnSlippageTbl.is_valid_slp_ptn_tup(ps.SlippagePtnTuple('NNTAANNN', 'D', 2)))
+        self.assertTrue(ps.PtnSlippageTbl.is_valid_slp_ptn_tup(ps.SlippagePtnTuple('NNZAAANN', 'I', 2)))
+        self.assertTrue(ps.PtnSlippageTbl.is_valid_slp_ptn_tup(ps.SlippagePtnTuple('NNZCCNNN', 'I', 2)))
+        self.assertTrue(ps.PtnSlippageTbl.is_valid_slp_ptn_tup(ps.SlippagePtnTuple('NNZCCNNN', 'H', 3)))
+
+
 if __name__ == '__main__':
     unittest.main()
