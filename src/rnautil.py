@@ -54,22 +54,26 @@ RNAParsedRecord = collections.namedtuple('RNAParsedRecord',
                                           'raw_cnt',
                                           'tn_cnt'))
 
+# Require that all dna promoter region sequences to have the same length
 def iterate_rna_parsed_record(rp_fn):
-    rp_file = open(rp_fn, 'r')
+    dna_prmt_seq_len = None
 
-    for line in rp_file:
-        fields = line.strip().split()
-        assert len(fields) == 6
-        
-        rna_parsed_record = RNAParsedRecord(rna_prmt_seq = fields[0],
-                                            dna_prmt_seq = fields[1],
-                                            raw_cnt = int(fields[3]),
-                                            tn_cnt = int(fields[4]))
+    with open(rp_fn, 'r') as rp_file:
+        for line in rp_file:
+            fields = line.strip().split()
+            assert len(fields) == 6
+            
+            rna_parsed_record = RNAParsedRecord(rna_prmt_seq = fields[0],
+                                                dna_prmt_seq = fields[1],
+                                                raw_cnt = int(fields[3]),
+                                                tn_cnt = int(fields[4]))
+            if dna_prmt_seq_len is None:
+                dna_prmt_seq_len = len(rna_parsed_record.dna_prmt_seq)
+            else:
+                assert dna_prmt_seq_len == len(rna_parsed_record.dna_prmt_seq)
+            
+            assert is_valid_seq(rna_parsed_record.rna_prmt_seq)
+            assert is_valid_seq(rna_parsed_record.dna_prmt_seq)
+            assert rna_parsed_record.raw_cnt >= rna_parsed_record.tn_cnt
 
-        assert is_valid_seq(rna_parsed_record.rna_prmt_seq)
-        assert is_valid_seq(rna_parsed_record.dna_prmt_seq)
-        assert rna_parsed_record.raw_cnt >= rna_parsed_record.tn_cnt
-
-        yield rna_parsed_record
-
-    rp_file.close()
+            yield rna_parsed_record
