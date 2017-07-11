@@ -2,6 +2,7 @@
 import env
 import unittest
 from src import profile_slippage as ps
+from src import rnautil as ru
 
 class TestSlippageTypeCountTable(unittest.TestCase):
     def test_invalid_slippage_type(self):
@@ -485,6 +486,15 @@ class TestDNASlippageTable(unittest.TestCase):
             else:
                 self.assertEqual(len(dna_slp_tbl._slp_type_cnt_tbl_dict[slp_type_tup]._slippage_cnt_dict), 0)
 
+def rna_parsed_rec_iterator():
+    yield ru.RNAParsedRecord('G', 'ACGTACTG', 5, 3)
+    yield ru.RNAParsedRecord('TG', 'ACGTACTG', 7, 2)
+    yield ru.RNAParsedRecord('CG', 'ACGTACTG', 3, 1)
+    yield ru.RNAParsedRecord('A', 'ACGTACTG', 9, 7)
+    yield ru.RNAParsedRecord('ACACTG', 'ACGTACTG', 9, 7)
+    yield ru.RNAParsedRecord('AACGTACTG', 'ACGTACTG', 9, 7)
+    yield ru.RNAParsedRecord('CACGTACTG', 'ACGTACTG', 9, 7)
+    yield ru.RNAParsedRecord('AAACGTACTG', 'ACGTACTG', 9, 7)
 
 class TestLibrarySlippageTable(unittest.TestCase):
     def test_ptn_dna_match(self):
@@ -498,6 +508,53 @@ class TestLibrarySlippageTable(unittest.TestCase):
                                                               'ACCAAATC'))
         self.assertTrue(ps.LibrarySlippageTable.ptn_dna_match(ps.SlippagePtnTuple('NNTAANNN', 'D', 2), 
                                                               'ACTAAATC'))
+        self.assertTrue(ps.LibrarySlippageTable.ptn_dna_match(ps.SlippagePtnTuple('NNGAANNN', 'D', 2), 
+                                                              'ACGAAATC'))
+
+        self.assertFalse(ps.LibrarySlippageTable.ptn_dna_match(ps.SlippagePtnTuple('NNZAANNN', 'I', 2), 
+                                                              'ACAAAATC'))
+        self.assertFalse(ps.LibrarySlippageTable.ptn_dna_match(ps.SlippagePtnTuple('NNZAANNN', 'I', 2), 
+                                                              'ACGTAATC'))
+        self.assertFalse(ps.LibrarySlippageTable.ptn_dna_match(ps.SlippagePtnTuple('NNZAANNN', 'I', 2), 
+                                                              'ACTATATC'))
+        self.assertFalse(ps.LibrarySlippageTable.ptn_dna_match(ps.SlippagePtnTuple('NNZAANNN', 'H', 3), 
+                                                              'ACAAAATC'))
+        self.assertFalse(ps.LibrarySlippageTable.ptn_dna_match(ps.SlippagePtnTuple('NNZAANNN', 'H', 3), 
+                                                              'ACCTAATC'))
+        self.assertFalse(ps.LibrarySlippageTable.ptn_dna_match(ps.SlippagePtnTuple('NNZAANNN', 'H', 3), 
+                                                              'ACCATATC'))
+        self.assertFalse(ps.LibrarySlippageTable.ptn_dna_match(ps.SlippagePtnTuple('NNTAANNN', 'D', 2), 
+                                                              'ACTCAATC'))
+        self.assertFalse(ps.LibrarySlippageTable.ptn_dna_match(ps.SlippagePtnTuple('NNGAANNN', 'D', 2), 
+                                                              'ACAAAATC'))
+
+        with self.assertRaises(ValueError):
+            ps.LibrarySlippageTable.ptn_dna_match(ps.SlippagePtnTuple('NNZAANNN', 'H', 3), 'ACCAAAT')
+
+        with self.assertRaises(ValueError):
+            ps.LibrarySlippageTable.ptn_dna_match(ps.SlippagePtnTuple('NNZAANN', 'H', 3), 'ACCAAATC')
+
+    def test_get_lib_slpg_cnt_dict(self):
+        with self.assertRaises(ValueError):
+            ps.LibrarySlippageTable((), 'A' * ps.LibrarySlippageTable._MAX_NUM_BP_UPSTREM_RND_REGION)
+        
+        lib_slp_tbl = ps.LibrarySlippageTable(rna_parsed_rec_iterator(), 
+                                              'A' * ps.LibrarySlippageTable._MAX_NUM_BP_UPSTREM_RND_REGION)
+        
+    def test_beg_seq(self):
+        with self.assertRaises(ValueError):
+            ps.LibrarySlippageTable(rna_parsed_rec_iterator(), 
+                                    'A' * (ps.LibrarySlippageTable._MAX_NUM_BP_UPSTREM_RND_REGION - 1))
+        with self.assertRaises(ValueError):
+            ps.LibrarySlippageTable(rna_parsed_rec_iterator(), '')
+        try:
+            ps.LibrarySlippageTable(rna_parsed_rec_iterator(), 
+                                    'A' * ps.LibrarySlippageTable._MAX_NUM_BP_UPSTREM_RND_REGION)
+        except ValueError:
+            self.fail("Beginning sequence with the same length as _MAX_NUM_BP_UPSTREM_RND_REGION should be OK.")
+
+    def test_get_slp_ptn_tbl(self):
+        pass
 
 class TestPtnSlippageTbl(unittest.TestCase):
     def test_is_valid_slp_ptn_tup(self):
@@ -508,6 +565,30 @@ class TestPtnSlippageTbl(unittest.TestCase):
         self.assertTrue(ps.PtnSlippageTbl.is_valid_slp_ptn_tup(ps.SlippagePtnTuple('NNZCCNNN', 'I', 2)))
         self.assertTrue(ps.PtnSlippageTbl.is_valid_slp_ptn_tup(ps.SlippagePtnTuple('NNZCCNNN', 'H', 3)))
 
+        with self.assertRaises(ValueError):
+            ps.PtnSlippageTbl.is_valid_slp_ptn_tup(ps.SlippagePtnTuple('NUZAANNN', 'I', 2))
+        with self.assertRaises(ValueError):
+            ps.PtnSlippageTbl.is_valid_slp_ptn_tup(ps.SlippagePtnTuple('NNZAANUN', 'H', 3))
+        with self.assertRaises(ValueError):
+            ps.PtnSlippageTbl.is_valid_slp_ptn_tup(ps.SlippagePtnTuple('LNTAANNN', 'D', 2))
+        with self.assertRaises(ValueError):
+            ps.PtnSlippageTbl.is_valid_slp_ptn_tup(ps.SlippagePtnTuple('LNTAANNN', 'O', 2))
 
+        self.assertFalse(ps.PtnSlippageTbl.is_valid_slp_ptn_tup(ps.SlippagePtnTuple('NNNAANNN', 'I', 2)))
+        self.assertFalse(ps.PtnSlippageTbl.is_valid_slp_ptn_tup(ps.SlippagePtnTuple('NNZZANNN', 'H', 3)))
+        self.assertFalse(ps.PtnSlippageTbl.is_valid_slp_ptn_tup(ps.SlippagePtnTuple('NNNAANNN', 'D', 2)))
+        self.assertFalse(ps.PtnSlippageTbl.is_valid_slp_ptn_tup(ps.SlippagePtnTuple('NNAAAANN', 'I', 2)))
+        self.assertFalse(ps.PtnSlippageTbl.is_valid_slp_ptn_tup(ps.SlippagePtnTuple('NNCCCNNN', 'I', 2)))
+        self.assertFalse(ps.PtnSlippageTbl.is_valid_slp_ptn_tup(ps.SlippagePtnTuple('NNZGCNNN', 'H', 3)))
+
+    def test_fmt_s_ptn_slp_cnt_tbl(self):
+        pass
+
+    def test_fmt_ptn_slp_cnt_tbl(self):
+        pass
+
+    def test_has_same_len_range(self):
+        pass
+    
 if __name__ == '__main__':
     unittest.main()
