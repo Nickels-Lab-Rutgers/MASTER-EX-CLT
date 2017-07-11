@@ -3,7 +3,7 @@ import argparse
 import rnautil
 import collections
 
-# Fields started with '_' are read only. 
+# **NOTE**: Fields started with '_' are read only. 
 
 class DNASlippageTable(object):
     """docstring for DNASlippageTable"""
@@ -211,14 +211,23 @@ least {} nucleotides: {}'.format(self._MAX_NUM_BP_UPSTREM_RND_REGION, beg_seq)
             raise ValueError(msg)
 
         self._beg_seq = beg_seq[-self._MAX_NUM_BP_UPSTREM_RND_REGION:]
-        self._lib_slpg_cnt_dict = self.get_lib_slpg_cnt_dict(rna_parsed_tbl_iterator)
-        # DNA promoter region sequences are required to have the same length. 
-        self._cmpl_dna_prmt_seq_len = len(self._lib_slpg_cnt_dict.keys()[0])
+        self._cmpl_dna_prmt_seq_len, self._lib_slpg_cnt_dict = \
+            self.get_lib_slpg_cnt_dict(rna_parsed_tbl_iterator)
         
     def get_lib_slpg_cnt_dict(self, rna_parsed_tbl_iterator):
         # {dna : dna_slippage_count_table}
         lib_slpg_cnt_dict = {}
+        cmpl_dna_prmt_seq_len = None
         for rna_parsed_record in rna_parsed_tbl_iterator:
+            # Assert that all DNA promoter regions have the same length
+            if cmpl_dna_prmt_seq_len is None:
+                cmpl_dna_prmt_seq_len = self._MAX_NUM_BP_UPSTREM_RND_REGION \
+                    + len(rna_parsed_record.dna_prmt_seq)
+            else:
+                if cmpl_dna_prmt_seq_len != self._MAX_NUM_BP_UPSTREM_RND_REGION \
+                    + len(rna_parsed_record.dna_prmt_seq):
+                    raise ValueError("All DNA promoter regions should have the same length.")
+            
             # Only process rna_prmt_seq with less than _MAX_NUM_BP_UPSTREM_RND_REGION upstream
             # of dna_prmt_seq
             if (len(rna_parsed_record.rna_prmt_seq) 
@@ -232,7 +241,10 @@ least {} nucleotides: {}'.format(self._MAX_NUM_BP_UPSTREM_RND_REGION, beg_seq)
             lib_slpg_cnt_dict[cmpl_dna_prmt_seq].add_rna_seq(rna_parsed_record.rna_prmt_seq, 
                                                              rna_parsed_record.raw_cnt, 
                                                              rna_parsed_record.tn_cnt)
-        return lib_slpg_cnt_dict
+        if cmpl_dna_prmt_seq_len is None:
+            raise ValueError("RNA parsed record iterator should not be empty.")
+        
+        return (cmpl_dna_prmt_seq_len, lib_slpg_cnt_dict)
 
     def get_ptn_slippage_tbl(self, ptn_tup_tup):
         # all pattern slippage table
@@ -266,8 +278,10 @@ least {} nucleotides: {}'.format(self._MAX_NUM_BP_UPSTREM_RND_REGION, beg_seq)
                         not in dna_slippage_cnt_tbl._slp_type_cnt_tbl_dict:
                         raise ValueError('Slippage pattern not in dna_cnt_tbl: {}'.format(ptn_tup))
 
+                    # Access of the dna_slippage_cnt_tbl. 
+                    # The index should be complete dna_prmt_seq index.
                     dna_slpg_type_cnt_tbl = dna_slippage_cnt_tbl._slp_type_cnt_tbl_dict[(ptn_tup.slippage_type, 
-                                                    ptn_tup.match_start_ind + self._MAX_NUM_BP_UPSTREM_RND_REGION)]
+                                                ptn_tup.match_start_ind + self._MAX_NUM_BP_UPSTREM_RND_REGION)]
                     for length in dna_slpg_type_cnt_tbl._slippage_cnt_dict:
                         s_ptn_cnt_dict[length]['slippage_tn_cnt'] \
                             += dna_slpg_type_cnt_tbl._slippage_cnt_dict[length]['tn_cnt']
