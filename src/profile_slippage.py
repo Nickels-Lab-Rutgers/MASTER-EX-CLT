@@ -420,11 +420,10 @@ class PtnSlippageTbl(object):
         raw_a_list = map(lambda cnt_dict: cnt_dict['mismatched_raw_cnt'] + cnt_dict['matched_raw_cnt'], 
                          s_ptn_slp_cnt_tup)
 
-        s_ptn_slp_cnt_str = ''
-        for l in (tn_slp_list, raw_slp_list, tn_m_list, raw_m_list, tn_a_list, raw_a_list):
-            s_ptn_slp_cnt_str += '\t'.join(map(str, l)) + '\t'
+        s_ptn_slp_cnt_str = '\t'.join(map(lambda l: '\t'.join(map(str, l)),
+                                          (tn_slp_list, raw_slp_list, tn_m_list,
+                                           raw_m_list, tn_a_list, raw_a_list))) + '\n'
 
-        s_ptn_slp_cnt_str += '\n'
         return s_ptn_slp_cnt_str
 
     
