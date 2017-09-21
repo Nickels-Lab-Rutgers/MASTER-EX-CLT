@@ -126,7 +126,7 @@ class DNASeuenceContainer:
         stats += "Number of low count barcodes: %d (%s%%)\n" % (
             num_low_count_brcd,
             "{:.4f}".format(float(num_low_count_brcd) / num_brcd * 100))
-        stats += "Number of low count barcodes: %d (%s%%)\n" % (
+        stats += "Number of low count reads: %d (%s%%)\n" % (
             num_low_count_reads,
             "{:.4f}".format(float(num_low_count_reads) / parsed_read_cnt * 100))
         return stats
@@ -213,7 +213,6 @@ def main():
 
     args = arg_parser.parse_args()
 
-    print args
     parse_dna_fastq_files(fastqutil.phread_quality_int_to_char(args.qcutoff),
                           args.plen, args.blen, args.or_fn, args.os_fn,
                           args.ifn_list, rcutoff = args.rcutoff)
