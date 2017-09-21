@@ -3,6 +3,7 @@ Beginning fixed sequence: AGTGAGCGCAACGCAATAACAGTCATCTAGATAGAACTTTAGGCACCCCAGGCT
 Random promoter region length: 7
 Middle fixed sequence: GATAACAATTTCAACAAT
 Random barcode region length: 15
+End fixed sequence: TGGAA
 
 Total number of reads: 53
 Number of parsed reads: 53 (100.0000%)

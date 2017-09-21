@@ -1,0 +1,21 @@
+Analyzed files: ['data/linenum.txt', 'data/empty_line.txt']
+Beginning fixed sequence: AGTGAGCGCAACGCAATAACAGTCATCTAGATAGAACTTTAGGCACCCCAGGCTTGACACTTTATGCTTCGGCTCGTATAATGTGTGGAA
+Random promoter region length: 7
+Middle fixed sequence: GATAACAATTTCAACAAT
+Random barcode region length: 15
+End fixed sequence: TGGAA
+
+Total number of reads: 5
+Number of parsed reads: 0 (0.0000%)
+Number of structure failed reads: 5 (100.0000%)
+Number of quality failed reads: 0 (0.0000%)
+
+For all 0 parsed reads:
+Number of total barcodes: 0
+Number of valid barcodes: 0 (0.0000%)
+Number of valid reads: 0 (0.0000%)
+Number of promoter regions: 0
+Number of multi-mapped barcodes: 0 (0.0000%)
+Number of multi-mapped reads: 0 (0.0000%)
+Number of low count barcodes: 0 (0.0000%)
+Number of low count barcodes: 0 (0.0000%)

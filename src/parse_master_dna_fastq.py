@@ -1,5 +1,5 @@
 #!/usr/bin/env python2.7
-import sys
+import argparse
 import fastqutil
 
 
@@ -132,7 +132,7 @@ class DNASeuenceContainer:
         return stats
 
 
-def parse_dna_fastq_files(qcutoff, plen, blen, or_fn, os_fn, ifn_list):
+def parse_dna_fastq_files(qcutoff, plen, blen, or_fn, os_fn, ifn_list, rcutoff = 10):
     num_total_reads = 0
     num_struct_failed_reads = 0
     num_qual_failed_reads = 0
@@ -160,7 +160,8 @@ def parse_dna_fastq_files(qcutoff, plen, blen, or_fn, os_fn, ifn_list):
     stats += "Beginning fixed sequence: %s\n" % BEG_SEQ
     stats += "Random promoter region length: %d\n" % plen
     stats += "Middle fixed sequence: %s\n" % MID_SEQ
-    stats += "Random barcode region length: %d\n\n" % blen
+    stats += "Random barcode region length: %d\n" % blen
+    stats += "End fixed sequence: %s\n\n" % END_SEQ
     stats += "Total number of reads: %d\n" % num_total_reads
     # Avoid divide by 0
     if num_total_reads == 0:
@@ -176,38 +177,46 @@ def parse_dna_fastq_files(qcutoff, plen, blen, or_fn, os_fn, ifn_list):
         "{:.4f}".format(float(num_qual_failed_reads) / num_total_reads * 100))
 
     stats += "For all %d parsed reads:\n" % num_parsed_reads
-    stats += dna_seq_container.output_seq(or_fn, 0.9, 10)
+    stats += dna_seq_container.output_seq(or_fn, 0.9, rcutoff)
 
     with open(os_fn, 'w') as os_file:
         os_file.write(stats)
 
     return num_total_reads
 
+
+
 def main():
-    argv = sys.argv
-    if len(argv) <= 6:
-        sys.stderr.write("Usage: \n\
-%s [Sanger quality score cutoff (>=)] [random promoter region length] \
-[barcode length] <output DNA parsed file name> <output DNA stats file name> \
-<FASTQ files (space separated)>\n" % argv[0])
-        return -1
+    arg_parser = argparse.ArgumentParser()
 
-    qc = int(argv[1])
-    if qc < 0 or qc > 93:
-        sys.stderr.write('Quality score cutoff should >= 0 and <= 93')
-        return -2
+    arg_parser.add_argument('-q', '--qcutoff', type = int, default = 0,
+                            help = 'FASTQ per base Phred quality score cutoff.'
+                                   'Discard reads with quality score < qcutoff')
 
-    qcutoff = chr(qc + 33)
-    # print qcutoff
-    plen = int(argv[2])
-    blen = int(argv[3])
+    arg_parser.add_argument('-r', '--rcutoff', type = int, default = 10,
+                            help = 'Read count cutoff of barcodes. '
+                                   'Discard barcode-promoter pairs with < cutoff '
+                                   'reads.')
+    
+    arg_parser.add_argument('plen', metavar = '<random promoter region length>',
+                            type = int)
 
-    or_fn = argv[4]
-    os_fn = argv[5]
+    arg_parser.add_argument('blen', metavar = '<barcode region length>',
+                            type = int)
 
-    ifn_list = argv[6:]
+    arg_parser.add_argument('or_fn', metavar = '<output DNA parsed file name>')
 
-    parse_dna_fastq_files(qcutoff, plen, blen, or_fn, os_fn, ifn_list)
+    arg_parser.add_argument('os_fn', metavar = '<output DNA stats file name>')
+
+    arg_parser.add_argument('ifn_list', nargs = '+',
+                            metavar = '<FASTQ files (space separated)>')
+
+    args = arg_parser.parse_args()
+
+    print args
+    parse_dna_fastq_files(fastqutil.phread_quality_int_to_char(args.qcutoff),
+                          args.plen, args.blen, args.or_fn, args.os_fn,
+                          args.ifn_list, rcutoff = args.rcutoff)
 
     return 0
 

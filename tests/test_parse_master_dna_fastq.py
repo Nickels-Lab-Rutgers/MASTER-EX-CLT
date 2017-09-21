@@ -17,23 +17,23 @@ class TestFastqFileParser(unittest.TestCase):
     def test_linenum(self):
         self.assertEqual(
             parse_master_dna_fastq.parse_dna_fastq_files('!', 7, 15, "data/testout.txt", 
-                "data/teststat.txt", ["data/linenum.txt"]), 
+                "data/dna_teststat.txt", ["data/linenum.txt"]), 
             3)
 
         self.assertEqual(
             parse_master_dna_fastq.parse_dna_fastq_files('!', 7, 15, "data/testout.txt", 
-                "data/teststat.txt", ["data/empty_line.txt"]), 
+                "data/dna_teststat.txt", ["data/empty_line.txt"]), 
             2)
 
         self.assertEqual(
             parse_master_dna_fastq.parse_dna_fastq_files('!', 7, 15, "data/testout.txt", 
-                "data/teststat.txt", ["data/linenum.txt", "data/empty_line.txt"]), 
+                "data/dna_teststat.txt", ["data/linenum.txt", "data/empty_line.txt"]), 
             5)
 
     def test_bad_fastq_file(self):
         with self.assertRaises(ValueError):
             parse_master_dna_fastq.parse_dna_fastq_files('!', 7, 15, "data/testout.txt", 
-                "data/teststat.txt", ["data/line_num_not_multiple_of_4.txt"])
+                "data/dna_teststat.txt", ["data/line_num_not_multiple_of_4.txt"])
 
     def test_result(self):
         brcd_prmt_list = sorted([('CGTACGTACGTACGT', 'ACGTACG', 10),
