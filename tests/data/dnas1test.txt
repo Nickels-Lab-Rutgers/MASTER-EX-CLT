@@ -1,9 +1,9 @@
 Analyzed files: ['data/dna1.fastq']
-Beginning fixed sequence: AGTGAGCGCAACGCAATAACAGTCATCTAGATAGAACTTTAGGCACCCCAGGCTTGACACTTTATGCTTCGGCTCGTATAATGTGTGGAA
+Beginning fixed sequence: ATAGAACTTTAGGCACCCCAGGCTTGACACTTTATGCTTCGGCTCGTATAATGTGTGGAA
 Random promoter region length: 7
 Middle fixed sequence: GATAACAATTTCAACAAT
 Random barcode region length: 15
-End fixed sequence: TGGAA
+End fixed sequence: 
 
 Total number of reads: 53
 Number of parsed reads: 53 (100.0000%)
