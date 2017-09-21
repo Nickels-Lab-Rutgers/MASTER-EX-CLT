@@ -31,3 +31,12 @@ def iterate_fastq_file(seq_fn):
 
     if parsed_line_num % 4 != 0:
         raise ValueError("Number of line is not a multiple of 4")
+
+
+def phread_quality_int_to_char(qint):
+    if qint < 0 or qint > 93:
+        raise ValueError('Quality score cutoff should >= 0 and <= 93')
+
+    qchar = chr(qint + 33)
+
+    return qchar
