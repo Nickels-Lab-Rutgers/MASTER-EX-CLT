@@ -96,10 +96,10 @@ class DNASeuenceContainer:
                     if prmt_dict[prmt_seq] == max_prmt_count:
                         or_file.write('%s\t%s\t%d\n' % (brcd_seq, prmt_seq, max_prmt_count))
                         prmt_set.add(prmt_seq)
-                    else:
-                        # ISSUE: Diversity should only be incremented once
-                        num_multi_map_brcd += 1
-                        num_multi_map_reads += prmt_dict[prmt_seq]
+                    # else:
+                    #     # ISSUE: Diversity should only be incremented once
+                    #     num_multi_map_brcd += 1
+                    #     num_multi_map_reads += prmt_dict[prmt_seq]
 
         or_file.close()
 
