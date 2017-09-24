@@ -1,5 +1,5 @@
 # MASTER Extended Command Line Tools
-This package includes a set of command line tools for analyzing _MA_ssively _S_ystematic _T_ranscript _E_nd _R_eadout (MASTER) data. The purpose is to determine the number of RNA reads emanating from each position of DNA template. 
+This package includes a set of command line tools for analyzing MAssively Systematic Transcript End Readout (MASTER) data. The purpose is to determine the number of RNA reads emanating from each position of DNA template. 
 
 Two main steps of general MASTER data analysis are DNA template analysis and 5' RNA-Seq analysis. 
 
