@@ -1,5 +1,5 @@
 # MASTER Extended Command Line Tools
-This package includes a set of command line tools for analyzing __MA__ssively __S__ystematic __T__ranscript __E__nd __R__eadout (MASTER) data. The purpose is to determine the number of RNA reads emanating from each position of DNA template. 
+This package includes a set of command line tools for analyzing _MA_ssively _S_ystematic _T_ranscript _E_nd _R_eadout (MASTER) data. The purpose is to determine the number of RNA reads emanating from each position of DNA template. 
 
 Two main steps of general MASTER data analysis are DNA template analysis and 5' RNA-Seq analysis. 
 
@@ -19,20 +19,20 @@ The purpose of analyzing 5' RNA-Seq results is to identify the DNA templates and
 
 ## Other command line tools
 
-### `attach_dna_prmt_suffix.py`
+`attach_dna_prmt_suffix.py`
 Attach suffix sequence to the TSS-region sequence in DNA parsed results. 
 
-### `count_seq_prefix.py`
+`count_seq_prefix.py`
 Count the number of reads with different prefix sequence in FASTQ file.
 
-### `count_spike_in_seq.py`
+`count_spike_in_seq.py`
 Count the number of spike-in sequence reads in FASTQ file. 
 
-### `gen_merged_rna_prmt_seq_tbl.py`
+`gen_merged_rna_prmt_seq_tbl.py`
 Generate the 5' RNA-Seq read summary files using parsed results. 
 
-### `prefix_grep_fastq.py`
+`prefix_grep_fastq.py`
 Select sequencing reads in FASTQ file with specific prefix. 
 
-### `profile_slippage.py`
+`profile_slippage.py`
 Profile the transcription slippage in 5' RNA-Seq reads. 
