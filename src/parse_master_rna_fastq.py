@@ -1,5 +1,5 @@
 #!/usr/bin/env python2.7
-import sys
+import argparse
 import fastqutil
 import rnautil
 
@@ -229,33 +229,35 @@ def parse_rna_fastq_files(qcutoff, dlen, plen, blen, idna_parsed_fn, or_fn, os_f
     return num_total_reads
 
 def main():
-    argv = sys.argv
-    if len(argv) <= 8:
-        sys.stderr.write("Usage: \n\
-%s [Sanger quality score cutoff (>=)] [digital tag length] [random promoter region length] \
-[barcode length] <input DNA parsed file> <output RNA parsed file name> \
-<output RNA stats file name> <FASTQ files (space separated)>\n" % argv[0])
-        return -1
+    arg_parser = argparse.ArgumentParser()
 
-    qc = int(argv[1])
-    if qc < 0 or qc > 93:
-        sys.stderr.write('Quality score cutoff should >= 0 and <= 93')
-        return -2
+    arg_parser.add_argument('-q', '--qcutoff', type = int, default = 0,
+                            help = 'FASTQ per base Phred quality score cutoff.'
+                                   'Discard reads with quality score < qcutoff')
 
-    qcutoff = chr(qc + 33)
-    # print qcutoff
-    dlen = int(argv[2])
-    plen = int(argv[3])
-    blen = int(argv[4])
+    arg_parser.add_argument('dlen', metavar = '<digital tag length>',
+                            type = int)
 
-    idna_parsed_fn = argv[5]
+    arg_parser.add_argument('plen', metavar = '<random promoter region length>',
+                            type = int)
+
+    arg_parser.add_argument('blen', metavar = '<barcode region length>',
+                            type = int)
+
+    arg_parser.add_argument('idna_parsed_fn', metavar = '<input DNA parsed file>')
+
+    arg_parser.add_argument('or_fn', metavar = '<output RNA parsed file name>')
+
+    arg_parser.add_argument('os_fn', metavar = '<output RNA stats file name>')
+
+    arg_parser.add_argument('ifn_list', nargs = '+',
+                            metavar = '<FASTQ files (space separated)>')
+
+    args = arg_parser.parse_args()
     
-    or_fn = argv[6]
-    os_fn = argv[7]
-
-    ifn_list = argv[8:]
-
-    parse_rna_fastq_files(qcutoff, dlen, plen, blen, idna_parsed_fn, or_fn, os_fn, ifn_list)
+    parse_rna_fastq_files(fastqutil.phread_quality_int_to_char(args.qcutoff),
+                          args.dlen, args.plen, args.blen, args.idna_parsed_fn,
+                          args.or_fn, args.os_fn, args.ifn_list)
 
     return 0
 
