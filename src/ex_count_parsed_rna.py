@@ -43,6 +43,9 @@ def ex_count_parsed_rna(dna_rd_len, dna_rd_start_ind, i_fn, mm_fn, o_fn):
         else:
             assert dna_suffix == dna[dna_rd_start_ind + dna_rd_len:]
 
+        # dna = dna_prefix + dna_rd_seq + dna_suffix
+        # dna_prefix is not used
+        # dna_suffix is fixed
         # Only count RNA with promoter seq len [1, DNA prmt seq len + 5]
         if rna_len <= max_rna_prmt_seq_len:
             count_dict[dna_rd_seq]['TNA'][rna_len] += tn_cnt
