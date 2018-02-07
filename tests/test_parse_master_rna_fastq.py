@@ -74,6 +74,50 @@ class TestFastqFileParser(unittest.TestCase):
         self.assertEqual(r1testlist, r1reflist)
 
 
+    def test_m_prmt_brcd_dump(self):
+        dna_tpl_list2 = [('CGTACGTACGTACGT', 'ACGTACG', 10),
+                        ('CCCCCCCCCCCCCCC', 'ACGTACG', 20),
+                        ('AAAAAAAAAAAAAAA', 'CCCCCCC', 10)]
+        with open("data/dnatpl2.txt", 'w') as ofile:
+            ofile.write('\n'.join(['\t'.join(map(str, tup)) for tup in dna_tpl_list2]) + '\n')
+
+        rna_seq_list2 = sorted([('TTTTTTTTTTTTTTT', 'CC', 'AAAAAAAAAAAAAAA', 10),
+                                ('TTTTTTTTTTTTTTC', 'CC', 'AAAAAAAAAAAAAAA', 10),
+                                ('TTTTTTTTTTTTTTG', 'CC', 'AAAAAAAAAAAAAAA', 10),
+                                ('TTTTTTTTTTTTTTG', 'GG', 'AAAAAAAAAAAAAAA', 30),
+                                ('TTTTTTTTTTTTTTG', 'ACGTACG', 'CGTACGTACGTACGT', 20),
+                                ('TTTTTTTTTTTTTTA', 'CACGTACG', 'CGTACGTACGTACGT', 1),
+                                ('TTTTTTTTTTTTTTA', 'CAGGTACG', 'CGTACGTACGTACGT', 2),
+                                ('TTTTTTTTTTTTTAA', 'CCACGTACG', 'CGTACGTACGTACGT', 3),
+                                ('TTTTTTTTTTTTTAA', 'CCCAAGTACG', 'CGTACGTACGTACGT', 5), 
+                                ('TTTTTTTTTTTTTAA', 'CCACGTACG', 'CCCCCCCCCCCCCCC', 5), 
+                                ('TTTTTTTTTTTTTAA', 'CCACGTACG', 'CCCCCCCCCCCCCCG', 5),
+                               ],
+                              key = lambda tup: tup[2])
+
+        r1ref_dump_list = [('CCCCCCC', 'CC', 'AAAAAAAAAAAAAAA', 3, 30),
+                           ('ACGTACG', 'CACGTACG', 'CGTACGTACGTACGT', 1, 1),
+                           ('ACGTACG', 'ACGTACG', 'CGTACGTACGTACGT', 1, 20),
+                           ('ACGTACG', 'CCACGTACG', 'CGTACGTACGTACGT', 1, 3),
+                           ('ACGTACG', 'CCACGTACG', 'CCCCCCCCCCCCCCC', 1, 5)]
+
+        ffile = open('data/rna_dump_test.fastq', 'w')
+        for dtagseq, prmtseq, brcdseq, count in rna_seq_list2:
+            ffile.write(construct_rna_fastq_rec(dtagseq, brcdseq, prmtseq, count))
+        ffile.close()
+
+        parse_master_rna_fastq.parse_rna_fastq_files('!', 15, 7, 15, "data/dnatpl2.txt",
+            "data/rna_dump_test_result.txt", "data/rna_dump_test_stats.txt", 
+            ["data/rna_dump_test.fastq"], True)
+
+        with open('data/rna_dump_test_result.txt.m_prmt_brcd_dump', 'r') as ifile:
+            r1test_dump_list = sorted([line.strip().split() for line in ifile])
+
+        r1ref_dump_list = sorted([map(str, tup) for tup in r1ref_dump_list])
+
+        self.assertEqual(r1test_dump_list, r1ref_dump_list)
+
+
 class TestRNASeqParser(unittest.TestCase):
     tpl_seq = ('C' * 15 + 'AAACGTACG' + parse_master_rna_fastq.MID_SEQ + 
         'CGTACGTACGTACGT' + parse_master_rna_fastq.END_SEQ)

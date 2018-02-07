@@ -89,6 +89,39 @@ class RNASequenceContainer:
             self.rna_seq_dict[brcd_seq][prmt_seq][0] += 1
             self.rna_seq_dict[brcd_seq][prmt_seq][1][dtag_seq] += 1
 
+    # Dump promoter and barcode sequences
+    # dna
+    # prmt
+    # brcd
+    # tnm
+    # m
+    def dump_m_prmt_brcd_seq(self, output_fn):
+        with open(output_fn, 'w') as od_file:
+            for brcd_seq, prmt_dict in self.rna_seq_dict.iteritems():
+                if brcd_seq in self.dna_tpl_dict:
+                    dna_prmt_seq = self.dna_tpl_dict[brcd_seq][0]
+                    for prmt_seq, prmt_count_list in prmt_dict.iteritems():
+                        if rnautil.seq_rmatch(prmt_seq, dna_prmt_seq):
+                            prmt_rmatch = 1
+                        else:
+                            prmt_rmatch = 0
+                        start_ind = len(dna_prmt_seq) - len(prmt_seq) + 1
+
+                        prmt_read_count = prmt_count_list[0]
+                        prmt_dtag_conut = len(prmt_count_list[1])
+
+                        if prmt_rmatch == 1:
+                            # dna
+                            # prmt
+                            # brcd
+                            # tnm
+                            # m
+                            od_file.write('%s\t%s\t%s\t%d\t%d\n' % (dna_prmt_seq,
+                                                                    prmt_seq,
+                                                                    brcd_seq,
+                                                                    prmt_dtag_conut,
+                                                                    prmt_read_count))
+
     # Write saved RNA sequences
     # Return RNA stats
     def output_seq(self, output_fn):
@@ -171,7 +204,8 @@ class RNASequenceContainer:
 
 
 
-def parse_rna_fastq_files(qcutoff, dlen, plen, blen, idna_parsed_fn, or_fn, os_fn, ifn_list):
+def parse_rna_fastq_files(qcutoff, dlen, plen, blen, idna_parsed_fn, or_fn, 
+                          os_fn, ifn_list, dump_m_prmt_brcd = False):
     num_total_reads = 0
     num_struct_failed_reads = 0
     num_qual_failed_reads = 0
@@ -226,10 +260,20 @@ def parse_rna_fastq_files(qcutoff, dlen, plen, blen, idna_parsed_fn, or_fn, os_f
     with open(os_fn, 'w') as os_file:
         os_file.write(stats)
 
+    od_fn = or_fn + '.m_prmt_brcd_dump'
+    if dump_m_prmt_brcd:
+        rna_seq_container.dump_m_prmt_brcd_seq(od_fn)
+
     return num_total_reads
 
 def main():
     arg_parser = argparse.ArgumentParser()
+    
+    arg_parser.add_argument('-d', '--dump', 
+                            help = 'Sepcify this argument to dump the matched DNA and RNA'
+                                   'promoter region and barcode sequences into anoter'
+                                   'output file suffixed with .pbdump',
+                            action = 'store_true')
 
     arg_parser.add_argument('-q', '--qcutoff', type = int, default = 0,
                             help = 'FASTQ per base Phred quality score cutoff.'
@@ -257,7 +301,7 @@ def main():
     
     parse_rna_fastq_files(fastqutil.phread_quality_int_to_char(args.qcutoff),
                           args.dlen, args.plen, args.blen, args.idna_parsed_fn,
-                          args.or_fn, args.os_fn, args.ifn_list)
+                          args.or_fn, args.os_fn, args.ifn_list, args.dump)
 
     return 0
 
